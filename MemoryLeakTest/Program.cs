@@ -34,11 +34,14 @@ var host = new HostBuilder()
     .Build();
 
 Console.WriteLine("Creating database...");
-using var context = host.Services.GetRequiredService<ApplicationDbContext>();
+using (var context = host.Services.GetRequiredService<ApplicationDbContext>())
+{
 await context.Database.EnsureCreatedAsync();
-for (int i = 0; i < 1_000_000; i++)
+    var existing = await context.People.CountAsync();
+    for (int i = existing; i < 1_000_000; i++)
     context.People.Add(new Person { Name = "Initial " + i, Version = Guid.NewGuid() });
 await context.SaveChangesAsync();
+}
 
 Console.WriteLine("Starting scheduler...");
 var schedulerFactory = host.Services.GetRequiredService<ISchedulerFactory>();
